@@ -12,6 +12,8 @@ import {
 import ImagePicker from 'react-native-image-crop-picker';
 var RNFS = require('react-native-fs');
 import ImageResizer from 'react-native-image-resizer';
+import RNFetchBlob from 'rn-fetch-blob';
+const strURLUploadImage = 'https://acb.xyz.vn';
 export default function App(props) {
   const bs = useRef();
   const [images, setImages] = useState([]);
@@ -59,6 +61,33 @@ export default function App(props) {
       });
     }
     console.log('Data upload', dataupload);
+    RNFetchBlob.fetch(
+      'POST',
+      strURLUploadImage, // api upload
+      {
+        Authorization: 'Bearer access-token',
+        otherHeader: 'foo',
+        'Content-Type': 'multipart/form-data',
+      },
+      dataupload,
+    )
+      .then((res) => {
+        var responseJson = res.json();
+        if (responseJson.success) {
+          console.log('Upload thanh cong');
+        } else {
+          console.log('Up anh that bai');
+          // eslint-disable-next-line no-alert
+          alert(
+            'Gửi ảnh thất bại! ' + typeof responseJson.mess !== undefined
+              ? responseJson.mess
+              : responseJson.Message,
+          );
+        }
+      })
+      .catch((error) => {
+        console.log(error);
+      });
     // const data = new FormData();
     // data.append('field', 'image');
     // images.forEach((item) => {
