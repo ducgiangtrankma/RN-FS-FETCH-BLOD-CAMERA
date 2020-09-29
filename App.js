@@ -10,13 +10,16 @@ import {
   StyleSheet,
 } from 'react-native';
 import ImagePicker from 'react-native-image-crop-picker';
+var RNFS = require('react-native-fs');
+import ImageResizer from 'react-native-image-resizer';
 export default function App(props) {
   const bs = useRef();
   const [images, setImages] = useState([]);
   const [isPick, setIsPick] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    console.log('debug');
     if (images.length === 0) {
       Alert.alert('Thông báo', 'Vui lòng chọn ít nhất 1 ảnh và thử lại');
       return;
@@ -36,15 +39,36 @@ export default function App(props) {
         setUploadProgress(percentCompleted);
       },
     };
-    const data = new FormData();
-    data.append('field', 'image');
-    images.forEach((item) => {
-      data.append('files', {
-        type: 'image/jpg',
-        uri: item.path,
-        name: `image${Date.now()}`,
+    var dataupload = [];
+    for (let i = 0; i < images.length; i++) {
+      console.log(images[i].path);
+      const resizedImage = await ImageResizer.createResizedImage(
+        images[i].path,
+        720,
+        576,
+        'JPEG',
+        100,
+        0,
+      );
+      const rnfspath = await RNFS.readFile(resizedImage.path, 'base64');
+      console.log(rnfspath);
+      dataupload.push({
+        name: 'image' + i,
+        data: rnfspath,
+        filename: 'ACTVN.png',
       });
-    });
+    }
+    console.log('Data upload', dataupload);
+    // const data = new FormData();
+    // data.append('field', 'image');
+    // images.forEach((item) => {
+    //   data.append('files', {
+    //     type: 'image/jpg',
+    //     uri: item.path,
+    //     name: `image${Date.now()}`,
+    //   });
+    // });
+    // console.log('Data 2', data);
 
     // axios
     //   .post('http://evn.thienthaitechnology.vn:1337/upload', data, config)
@@ -126,6 +150,9 @@ export default function App(props) {
         bounces={false}
         showsHorizontalScrollIndicator={false}
       />
+      <TouchableOpacity onPress={handleUpload}>
+        <Text>Upload</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
